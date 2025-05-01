@@ -26,6 +26,34 @@ CONFIG_DEFAULT: Dict[str, GSC] = {
         "公告推送总开关",
         True,
     ),
+        "CalendarReminderOpen": GsBoolConfig(
+        "活动提醒总开关",
+        "活动提醒推送总开关",
+        True,
+    ),
+    "CalendarReminderCheckInterval": GsIntConfig(
+        "活动提醒检查间隔(分钟)",
+        "活动提醒检查间隔(分钟)",
+        60,
+        1440,
+    ),
+    "FinalReminderInterval": GsIntConfig(
+        "活动结束前提醒间隔(小时)",
+        "活动结束前24小时内提醒间隔(小时)",
+        6,
+        24,
+    ),
+    "ReminderThresholdHours": GsIntConfig(
+        "活动提醒触发时间阈值(小时)",
+        "设置活动结束前多少小时开始推送提醒",
+        24,
+        720,
+    ),
+    "CalendarReminderForward": GsBoolConfig(
+        "活动提醒使用转发消息",
+        "开启后活动提醒消息会使用转发消息格式",
+        False,
+    ),
     "WavesRankUseTokenGroup": GsListStrConfig(
         "有token才能进排行，群管理可设置",
         "有token才能进排行，群管理可设置",

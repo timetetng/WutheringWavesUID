@@ -33,7 +33,7 @@ async def get_help(pm: int):
         plugin_help=plugin_help,
         plugin_prefix=PREFIX,
         help_mode="dark",
-        banner_bg=Image.open(TEXT_PATH / "banner_bg.jpg"),
+        banner_bg=Image.open(TEXT_PATH / "banner_pb.jpg"),
         banner_sub_text="漂泊者，欢迎在这个时代醒来。",
         help_bg=Image.open(TEXT_PATH / "bg.jpg"),
         cag_bg=Image.open(TEXT_PATH / "cag_bg.png"),

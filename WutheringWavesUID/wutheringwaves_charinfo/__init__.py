@@ -21,6 +21,13 @@ from .upload_card import (
     upload_custom_card,
 )
 
+from .upload_mr_card import (
+    delete_all_custom_mr_card,
+    delete_custom_mr_card,
+    get_custom_mr_card_list,
+    upload_custom_mr_card,
+)
+
 waves_new_get_char_info = SV("waves新获取面板", priority=3)
 waves_new_char_detail = SV("waves新角色面板", priority=4)
 waves_char_detail = SV("waves角色面板", priority=5)
@@ -30,6 +37,10 @@ waves_delete_char_card = SV("waves删除面板图", priority=5, pm=1)
 waves_delete_all_card = SV("waves删除全部面板图", priority=5, pm=1)
 waves_compress_card = SV("waves面板图压缩", priority=5, pm=1)
 
+waves_upload_mr_char = SV("waves上传体力背景图", priority=5, pm=1)
+waves_mr_char_card_list = SV("waves体力背景图列表", priority=5, pm=1)
+waves_delete_mr_char_card = SV("waves删除体力背景图", priority=5, pm=1)
+waves_delete_all_mr_card = SV("waves删除全部体力背景图", priority=5, pm=1)
 
 @waves_new_get_char_info.on_fullmatch(
     (
@@ -77,12 +88,12 @@ async def send_char_detail_msg(bot: Bot, ev: Event):
 
 
 @waves_new_char_detail.on_regex(
-    r"^(\d+)?[\u4e00-\u9fa5]+(面板|面包|伤害(\d+)?)(pk|对比|PK|比|比较)?(?:\s*)((换[^换]*)*)?$",
+    r"^(\d+)?[a-zA-Z\u4e00-\u9fa5🥔]+(面板|面包|mb|🍞|伤害(\d+)?)(pk|对比|PK|比|比较)?(?:\s*)((换[^换]*)*)?$",
     block=True,
 )
 async def send_char_detail_msg2(bot: Bot, ev: Event):
     match = re.search(
-        r"(?P<waves_id>\d+)?(?P<char>[\u4e00-\u9fa5]+)(?P<query_type>面板|面包|伤害(?P<damage>(\d+)?))(?P<is_pk>pk|对比|PK|比|比较)?(\s*)?(?P<change_list>((换[^换]*)*)?)",
+        r"(?P<waves_id>\d+)?(?P<char>[a-zA-Z\u4e00-\u9fa5🥔]+)(?P<query_type>面板|面包|mb|🍞|伤害(?P<damage>(\d+)?))(?P<is_pk>pk|对比|PK|比|比较)?(\s*)?(?P<change_list>((换[^换]*)*)?)",
         ev.raw_text,
     )
     if not match:
@@ -94,6 +105,13 @@ async def send_char_detail_msg2(bot: Bot, ev: Event):
     query_type = ev.regex_dict.get("query_type")
     is_pk = ev.regex_dict.get("is_pk") is not None
     change_list_regex = ev.regex_dict.get("change_list")
+
+# 如果角色名以 `ww` 开头，并且长度大于2时才去掉
+    if char and len(char) > 2 and char.startswith(("ww","mc")):
+        char = char[2:]
+
+    if waves_id and len(waves_id) != 9:
+        return
 
     if waves_id and len(waves_id) != 9:
         return
@@ -213,9 +231,9 @@ async def send_char_detail_msg2_weight(bot: Bot, ev: Event):
         return await bot.send(im, at_sender)
 
 
-@waves_upload_char.on_regex(r"^上传[\u4e00-\u9fa5]+面板图$", block=True)
+@waves_upload_char.on_regex(r"^上传[\u4e00-\u9fa5]+(色图|涩图|🐍图|面板图|🍞图|面包图)$", block=True)
 async def upload_char_img(bot: Bot, ev: Event):
-    match = re.search(r"上传(?P<char>[\u4e00-\u9fa5]+)面板图", ev.raw_text)
+    match = re.search(r"上传(?P<char>[\u4e00-\u9fa5]+)(色图|涩图|🐍图|面板图|🍞图|面包图)", ev.raw_text)
     if not match:
         return
     ev.regex_dict = match.groupdict()
@@ -225,9 +243,9 @@ async def upload_char_img(bot: Bot, ev: Event):
     await upload_custom_card(bot, ev, char)
 
 
-@waves_char_card_list.on_regex(r"^[\u4e00-\u9fa5]+面板图列表$", block=True)
+@waves_char_card_list.on_regex(r"^[\u4e00-\u9fa5]+(色图列表|涩图列表|🐍图列表|面板图列表|面包图列表)$", block=True)
 async def get_char_card_list(bot: Bot, ev: Event):
-    match = re.search(r"(?P<char>[\u4e00-\u9fa5]+)面板图列表", ev.raw_text)
+    match = re.search(r"(?P<char>[\u4e00-\u9fa5]+)(色图列表|涩图列表|🐍图列表|面板图列表|面包图列表)", ev.raw_text)
     if not match:
         return
     ev.regex_dict = match.groupdict()
@@ -238,11 +256,11 @@ async def get_char_card_list(bot: Bot, ev: Event):
 
 
 @waves_delete_char_card.on_regex(
-    r"^删除[\u4e00-\u9fa5]+面板图[a-zA-Z0-9]+$", block=True
+    r"^删除[\u4e00-\u9fa5]+(色图|涩图|🐍图|面板图|面包图)[a-zA-Z0-9]+$", block=True
 )
 async def delete_char_card(bot: Bot, ev: Event):
     match = re.search(
-        r"删除(?P<char>[\u4e00-\u9fa5]+)面板图(?P<hash_id>[a-zA-Z0-9]+)",
+        r"删除(?P<char>[\u4e00-\u9fa5]+)(色图|涩图|🐍图|面板图|面包图)(?P<hash_id>[a-zA-Z0-9]+)",
         ev.raw_text,
     )
     if not match:
@@ -255,9 +273,9 @@ async def delete_char_card(bot: Bot, ev: Event):
     await delete_custom_card(bot, ev, char, hash_id)
 
 
-@waves_delete_all_card.on_regex(r"^删除全部[\u4e00-\u9fa5]+面板图$", block=True)
+@waves_delete_all_card.on_regex(r"^删除全部[\u4e00-\u9fa5]+(色图|涩图|🐍图|面板图|面包图)$", block=True)
 async def delete_all_char_card(bot: Bot, ev: Event):
-    match = re.search(r"删除全部(?P<char>[\u4e00-\u9fa5]+)面板图", ev.raw_text)
+    match = re.search(r"删除全部(?P<char>[\u4e00-\u9fa5]+)(色图|涩图|🐍图|面板图|面包图)", ev.raw_text)
     if not match:
         return
     ev.regex_dict = match.groupdict()
@@ -266,7 +284,59 @@ async def delete_all_char_card(bot: Bot, ev: Event):
         return
     await delete_all_custom_card(bot, ev, char)
 
-
 @waves_compress_card.on_fullmatch("压缩面板图", block=True)
 async def compress_char_card(bot: Bot, ev: Event):
     await compress_all_custom_card(bot, ev)
+
+@waves_upload_mr_char.on_regex(r"^上传[\u4e00-\u9fa5]+(体力背景图|mr背景图)$", block=True)
+async def upload_mr_char_img(bot: Bot, ev: Event):
+    match = re.search(r"上传(?P<char>[\u4e00-\u9fa5]+)(体力背景图|mr背景图)", ev.raw_text)
+    if not match:
+        return
+    ev.regex_dict = match.groupdict()
+    char = ev.regex_dict.get("char")
+    if not char:
+        return
+    await upload_custom_mr_card(bot, ev, char)
+
+
+@waves_mr_char_card_list.on_regex(r"^[\u4e00-\u9fa5]+(体力背景图列表|mr背景图列表)$", block=True)
+async def get_mr_char_card_list(bot: Bot, ev: Event):
+    match = re.search(r"(?P<char>[\u4e00-\u9fa5]+)(体力背景图列表|mr背景图列表)", ev.raw_text)
+    if not match:
+        return
+    ev.regex_dict = match.groupdict()
+    char = ev.regex_dict.get("char")
+    if not char:
+        return
+    await get_custom_mr_card_list(bot, ev, char)
+
+
+@waves_delete_mr_char_card.on_regex(
+    r"^删除[\u4e00-\u9fa5]+(体力背景图|mr背景图)[a-zA-Z0-9]+$", block=True
+)
+async def delete_mr_char_card(bot: Bot, ev: Event):
+    match = re.search(
+        r"删除(?P<char>[\u4e00-\u9fa5]+)(体力背景图|mr背景图)(?P<hash_id>[a-zA-Z0-9]+)",
+        ev.raw_text,
+    )
+    if not match:
+        return
+    ev.regex_dict = match.groupdict()
+    char = ev.regex_dict.get("char")
+    hash_id = ev.regex_dict.get("hash_id")
+    if not char or not hash_id:
+        return
+    await delete_custom_mr_card(bot, ev, char, hash_id)
+
+
+@waves_delete_all_mr_card.on_regex(r"^删除全部[\u4e00-\u9fa5]+(体力背景图|mr背景图)$", block=True)
+async def delete_all_mr_char_card(bot: Bot, ev: Event):
+    match = re.search(r"删除全部(?P<char>[\u4e00-\u9fa5]+)(体力背景图|mr背景图)", ev.raw_text)
+    if not match:
+        return
+    ev.regex_dict = match.groupdict()
+    char = ev.regex_dict.get("char")
+    if not char:
+        return
+    await delete_all_custom_mr_card(bot, ev, char)

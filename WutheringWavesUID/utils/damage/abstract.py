@@ -135,10 +135,6 @@ class WeaponAbstract(object):
         """施放治疗"""
         pass
 
-    def cast_extension(self, attr: DamageAttribute, isGroup: bool = False):
-        """施放延奏技能"""
-        pass
-
 
 class EchoAbstract(object):
     name = None

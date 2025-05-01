@@ -91,11 +91,13 @@ async def send_login(bot: Bot, ev: Event, url):
             path.unlink()
     else:
         if WutheringWavesConfig.get_config("WavesTencentWord").data:
-            url = f"https://docs.qq.com/scenario/link.html?url={url}"
+            url1 = f"https://docs.qq.com/scenario/link.html?url={url}"
         im = [
             f"{game_title} 您的id为【{ev.user_id}】",
-            "请复制地址到浏览器打开",
-            f" {url}",
+            "安卓和PC用户可以直接点击链接跳转\n",
+            f" {url1}\n",
+            "IOS和其他平台复制到浏览器打开\n",
+            f" {url}\n",
             "登录地址10分钟内有效",
         ]
 

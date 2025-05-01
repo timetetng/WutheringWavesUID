@@ -106,7 +106,7 @@ class PhantomInfo:
 
 
 class ReplacePhantom:
-    PREFIX_RE: list[str] = ["声骸", "圣遗物"]
+    PREFIX_RE: list[str] = ["声骸", "生蚝","圣遗物"]
 
     # 主词条更换
 
