@@ -26,7 +26,6 @@ async def download_all_resource():
             "resource/role_pile": ROLE_PILE_PATH,
             "resource/role_detail/skill": ROLE_DETAIL_SKILL_PATH,
             "resource/role_detail/chains": ROLE_DETAIL_CHAINS_PATH,
-            "resource/share": SHARE_BG_PATH,
             "resource/phantom": PHANTOM_PATH,
             "resource/material": MATERIAL_PATH,
             "resource/guide/XMu": XMU_GUIDE_PATH,
