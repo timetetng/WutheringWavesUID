@@ -52,6 +52,7 @@ waves_delete_all_mr_card = SV("waves删除全部体力背景图", priority=5, pm
         "面板刷新",
         "面包刷新",
         "面板更新",
+        "面板",
     ),
     block=True,
 )

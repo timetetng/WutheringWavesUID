@@ -1,5 +1,4 @@
 # 赞妮
-from typing import Literal
 
 from ...api.model import RoleDetailData
 from ...ascension.char import WavesCharResult, get_char_detail2
@@ -16,6 +15,10 @@ from ...damage.utils import (
     skill_damage,
     skill_damage_calc,
 )
+<<<<<<< HEAD
+=======
+from .buff import feibi_buff, shouanren_buff
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
 from .damage import echo_damage, phase_damage, weapon_damage
 
 
@@ -46,6 +49,13 @@ def calc_damage_1(
     damage_func = [cast_attack, cast_skill]
     phase_damage(attr, role, damage_func, isGroup)
 
+<<<<<<< HEAD
+=======
+    title = "斩棘"
+    msg = "自身直接造成的【光噪效应】伤害加深20%"
+    attr.add_dmg_deepen(0.2, title, msg)
+
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
     # 设置角色等级
     attr.set_character_level(role.role.level)
 
@@ -66,19 +76,19 @@ def calc_damage_1(
     chain_num = role.get_chain_num()
     if chain_num >= 1:
         title = f"{role_name}-一链"
-        msg = f"施放集中压制时，衍射伤害加成提升50%"
+        msg = "施放集中压制时，衍射伤害加成提升50%"
         attr.add_dmg_bonus(0.5, title, msg)
 
     if chain_num >= 2:
         title = f"{role_name}-二链"
-        msg = f"集中压制倍率提升80%。"
+        msg = "集中压制倍率提升80%。"
         attr.add_skill_ratio(0.8, title, msg)
-        msg = f"暴击提升20%。"
+        msg = "暴击提升20%。"
         attr.add_crit_rate(0.2, title, msg)
 
     if chain_num >= 4 and isGroup:
         title = f"{role_name}-四链"
-        msg = f"施放变奏技能时，队伍中的角色攻击提升20%"
+        msg = "施放变奏技能时，队伍中的角色攻击提升20%"
         attr.add_atk_percent(0.2, title, msg)
 
     # 声骸
@@ -123,8 +133,15 @@ def calc_damage_2(
     )
     title = "【焰光】增加倍率*40层"
     msg = f"{yanguang_multi}*40"
-    attr.add_effect(title, msg)
+    attr.add_skill_multi(f"{yanguang_multi}*40", title, msg)
 
+<<<<<<< HEAD
+=======
+    title = "斩棘"
+    msg = "自身直接造成的【光噪效应】伤害加深20%"
+    attr.add_dmg_deepen(0.2, title, msg)
+
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
     # 设置角色施放技能
     damage_func = [cast_attack, cast_skill, cast_liberation, cast_hit]
     phase_damage(attr, role, damage_func, isGroup)
@@ -153,27 +170,29 @@ def calc_damage_2(
     chain_num = role.get_chain_num()
     if chain_num >= 1:
         title = f"{role_name}-一链"
-        msg = f"施放集中压制时，衍射伤害加成提升50%"
+        msg = "施放集中压制时，衍射伤害加成提升50%"
         attr.add_dmg_bonus(0.5, title, msg)
 
     if chain_num >= 2:
         title = f"{role_name}-二链"
-        msg = f"暴击提升20%。"
+        msg = "暴击提升20%。"
         attr.add_crit_rate(0.2, title, msg)
 
     if chain_num >= 4 and isGroup:
         title = f"{role_name}-四链"
-        msg = f"施放变奏技能时，队伍中的角色攻击提升20%"
+        msg = "施放变奏技能时，队伍中的角色攻击提升20%"
         attr.add_atk_percent(0.2, title, msg)
 
     if chain_num >= 6:
         title = f"{role_name}-六链"
+<<<<<<< HEAD
         msg = f"【焰光】额外增加倍率提升40%"
         attr.add_skill_multi(f"{yanguang_multi}*1.4*40", title, msg)
         msg = "重斩·终夜倍率提升40%"
+=======
+        msg = "终夜倍率提升40%"
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
         attr.add_skill_ratio(0.4, title, msg)
-    else:
-        attr.add_skill_multi(f"{yanguang_multi}*40")
 
     # 声骸
     echo_damage(attr, isGroup)
@@ -189,10 +208,14 @@ def calc_damage_2(
 
 
 def calc_damage_3(
+<<<<<<< HEAD
     attr: DamageAttribute,
     role: RoleDetailData,
     isGroup: bool = False,
     other_type: Literal["重斩·破晓", "重斩·将明", "重斩·闪裂"] = "重斩·破晓",
+=======
+    attr: DamageAttribute, role: RoleDetailData, isGroup: bool = False
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
 ) -> tuple[str, str]:
     # 设置角色伤害类型
     attr.set_char_damage(hit_damage)
@@ -207,21 +230,41 @@ def calc_damage_3(
     # 获取角色技能等级
     skillLevel = role.get_skill_level(skill_type)
     # 技能技能倍率
+<<<<<<< HEAD
     if other_type == "重斩·破晓":
         skillParamId = "1"
     elif other_type == "重斩·将明":
         skillParamId = "2"
     elif other_type == "重斩·闪裂":
         skillParamId = "5"
+=======
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
     skill_multi = skill_damage_calc(
-        char_result.skillTrees, SkillTreeMap[skill_type], skillParamId, skillLevel
+        char_result.skillTrees, SkillTreeMap[skill_type], "3", skillLevel
     )
-    title = f"{other_type}伤害"
-    msg = f"技能倍率{skill_multi}"
+    sm = skill_multi.split("+")
+    skill_multi = calc_percent_expression(sm[1]) * 0.5303128453301832
+    title = "终夜尾刀伤害"
+    msg = f"技能倍率{skill_multi*100:.2f}%"
     attr.add_skill_multi(skill_multi, title, msg)
 
+<<<<<<< HEAD
+=======
+    # 每点【焰光】增加倍率
+    yanguang_multi = skill_damage_calc(
+        char_result.skillTrees, SkillTreeMap[skill_type], "4", skillLevel
+    )
+    title = "【焰光】增加倍率*20层"
+    msg = f"{yanguang_multi}*20"
+    attr.add_skill_multi(f"{yanguang_multi}*20")
+
+    title = "斩棘"
+    msg = "自身直接造成的【光噪效应】伤害加深20%"
+    attr.add_dmg_deepen(0.2, title, msg)
+
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
     # 设置角色施放技能
-    damage_func = [cast_attack, cast_skill, cast_liberation]
+    damage_func = [cast_attack, cast_skill, cast_liberation, cast_hit]
     phase_damage(attr, role, damage_func, isGroup)
 
     # 设置角色等级
@@ -244,22 +287,22 @@ def calc_damage_3(
     chain_num = role.get_chain_num()
     if chain_num >= 1:
         title = f"{role_name}-一链"
-        msg = f"施放集中压制时，衍射伤害加成提升50%"
+        msg = "施放集中压制时，衍射伤害加成提升50%"
         attr.add_dmg_bonus(0.5, title, msg)
 
     if chain_num >= 2:
         title = f"{role_name}-二链"
-        msg = f"暴击提升20%。"
+        msg = "暴击提升20%。"
         attr.add_crit_rate(0.2, title, msg)
 
     if chain_num >= 4 and isGroup:
         title = f"{role_name}-四链"
-        msg = f"施放变奏技能时，队伍中的角色攻击提升20%"
+        msg = "施放变奏技能时，队伍中的角色攻击提升20%"
         attr.add_atk_percent(0.2, title, msg)
 
     if chain_num >= 6:
         title = f"{role_name}-六链"
-        msg = f"{other_type}倍率提升40%"
+        msg = "终夜倍率提升40%"
         attr.add_skill_ratio(0.4, title, msg)
 
     # 声骸
@@ -322,22 +365,22 @@ def calc_damage_4(
     chain_num = role.get_chain_num()
     if chain_num >= 1:
         title = f"{role_name}-一链"
-        msg = f"施放集中压制时，衍射伤害加成提升50%"
+        msg = "施放集中压制时，衍射伤害加成提升50%"
         attr.add_dmg_bonus(0.5, title, msg)
 
     if chain_num >= 2:
         title = f"{role_name}-二链"
-        msg = f"暴击提升20%。"
+        msg = "暴击提升20%。"
         attr.add_crit_rate(0.2, title, msg)
 
     if chain_num >= 4 and isGroup:
         title = f"{role_name}-四链"
-        msg = f"施放变奏技能时，队伍中的角色攻击提升20%"
+        msg = "施放变奏技能时，队伍中的角色攻击提升20%"
         attr.add_atk_percent(0.2, title, msg)
 
     if chain_num >= 5:
         title = f"{role_name}-五链"
-        msg = f"重燃倍率提升120%。"
+        msg = "重燃倍率提升120%。"
         attr.add_skill_ratio(1.2, title, msg)
 
     # 声骸
@@ -402,22 +445,22 @@ def calc_damage_5(
     chain_num = role.get_chain_num()
     if chain_num >= 1:
         title = f"{role_name}-一链"
-        msg = f"施放集中压制时，衍射伤害加成提升50%"
+        msg = "施放集中压制时，衍射伤害加成提升50%"
         attr.add_dmg_bonus(0.5, title, msg)
 
     if chain_num >= 2:
         title = f"{role_name}-二链"
-        msg = f"暴击提升20%。"
+        msg = "暴击提升20%。"
         attr.add_crit_rate(0.2, title, msg)
 
     if chain_num >= 3:
         title = f"{role_name}-三链"
-        msg = f"消耗150层【焰光】，终绝将至之刻2段的倍率增加1200%。"
+        msg = "消耗150层【焰光】，终绝将至之刻2段的倍率增加1200%。"
         attr.add_skill_multi(12, title, msg)
 
     if chain_num >= 4 and isGroup:
         title = f"{role_name}-四链"
-        msg = f"施放变奏技能时，队伍中的角色攻击提升20%"
+        msg = "施放变奏技能时，队伍中的角色攻击提升20%"
         attr.add_atk_percent(0.2, title, msg)
 
     # 声骸
@@ -433,12 +476,102 @@ def calc_damage_5(
     return crit_damage, expected_damage
 
 
+<<<<<<< HEAD
+=======
+def calc_damage_10(
+    attr: DamageAttribute, role: RoleDetailData, isGroup: bool = True
+) -> tuple[str, str]:
+    attr.set_env_spectro_deepen()
+    attr.set_char_damage(hit_damage)
+    attr.set_char_template("temp_atk")
+
+    # 菲比buff
+    feibi_buff(attr, 0, 1, isGroup)
+
+    return calc_damage_3(attr, role, isGroup)
+
+
+def calc_damage_11(
+    attr: DamageAttribute, role: RoleDetailData, isGroup: bool = True
+) -> tuple[str, str]:
+    attr.set_env_spectro_deepen()
+    attr.set_char_damage(hit_damage)
+    attr.set_char_template("temp_atk")
+    # 守岸人buff
+    shouanren_buff(attr, 0, 1, isGroup)
+
+    # 菲比buff
+    feibi_buff(attr, 0, 1, isGroup)
+
+    return calc_damage_3(attr, role, isGroup)
+
+
+def calc_damage_12(
+    attr: DamageAttribute, role: RoleDetailData, isGroup: bool = True
+) -> tuple[str, str]:
+    attr.set_env_spectro_deepen()
+    attr.set_char_damage(hit_damage)
+    attr.set_char_template("temp_atk")
+    # 守岸人buff
+    shouanren_buff(attr, 6, 5, isGroup)
+
+    # 菲比buff
+    feibi_buff(attr, 6, 5, isGroup)
+
+    return calc_damage_3(attr, role, isGroup)
+
+
+def calc_damage_13(
+    attr: DamageAttribute, role: RoleDetailData, isGroup: bool = True
+) -> tuple[str, str]:
+    attr.set_env_spectro_deepen()
+    attr.set_char_damage(hit_damage)
+    attr.set_char_template("temp_atk")
+    # 守岸人buff
+    shouanren_buff(attr, 0, 1, isGroup)
+
+    # 菲比buff
+    feibi_buff(attr, 0, 1, isGroup)
+
+    return calc_damage_2(attr, role, isGroup)
+
+
+def calc_damage_14(
+    attr: DamageAttribute, role: RoleDetailData, isGroup: bool = True
+) -> tuple[str, str]:
+    attr.set_env_spectro_deepen()
+    attr.set_char_damage(hit_damage)
+    attr.set_char_template("temp_atk")
+    # 守岸人buff
+    shouanren_buff(attr, 6, 5, isGroup)
+
+    # 菲比buff
+    feibi_buff(attr, 6, 5, isGroup)
+
+    return calc_damage_2(attr, role, isGroup)
+
+
+def calc_damage_15(
+    attr: DamageAttribute, role: RoleDetailData, isGroup: bool = True
+) -> tuple[str, str]:
+    attr.set_env_spectro_deepen()
+    attr.set_char_damage(hit_damage)
+    attr.set_char_template("temp_atk")
+
+    # 菲比buff
+    feibi_buff(attr, 0, 1, isGroup)
+
+    return calc_damage_2(attr, role, isGroup)
+
+
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
 damage_detail = [
     {
         "title": "集中压制伤害",
         "func": lambda attr, role: calc_damage_1(attr, role),
     },
     {
+<<<<<<< HEAD
         "title": "重斩·终夜伤害",
         "func": lambda attr, role: calc_damage_2(attr, role),
     },
@@ -457,11 +590,46 @@ damage_detail = [
     {
         "title": "重燃伤害",
         "func": lambda attr, role: calc_damage_4(attr, role),
+=======
+        "title": "终夜尾刀伤害",
+        "func": lambda attr, role: calc_damage_3(attr, role),
+    },
+    {
+        "title": "终夜总伤害",
+        "func": lambda attr, role: calc_damage_2(attr, role),
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
     },
     {
         "title": "终绝将至之刻2段伤害",
         "func": lambda attr, role: calc_damage_5(attr, role),
     },
+<<<<<<< HEAD
+=======
+    {
+        "title": "01菲/终夜尾刀伤害",
+        "func": lambda attr, role: calc_damage_10(attr, role),
+    },
+    {
+        "title": "01守/01菲/终夜尾刀伤害",
+        "func": lambda attr, role: calc_damage_11(attr, role),
+    },
+    {
+        "title": "65守/65菲/终夜尾刀伤害",
+        "func": lambda attr, role: calc_damage_12(attr, role),
+    },
+    {
+        "title": "01菲/终夜总伤害",
+        "func": lambda attr, role: calc_damage_15(attr, role),
+    },
+    {
+        "title": "01守/01菲/终夜总伤害",
+        "func": lambda attr, role: calc_damage_13(attr, role),
+    },
+    {
+        "title": "65守/65菲/终夜总伤害",
+        "func": lambda attr, role: calc_damage_14(attr, role),
+    },
+>>>>>>> ea8798441103f5900693c495b0849ec0b97a8ff9
 ]
 
 rank = damage_detail[1]
