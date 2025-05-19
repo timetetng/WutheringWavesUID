@@ -27,6 +27,8 @@ from .upload_mr_card import (
     get_custom_mr_card_list,
     upload_custom_mr_card,
 )
+import json 
+from ..utils.resource.RESOURCE_PATH import CUSTOM_CHAR_ALIAS_PATH
 
 waves_new_get_char_info = SV("waves新获取面板", priority=3)
 waves_new_char_detail = SV("waves新角色面板", priority=4)
@@ -41,6 +43,60 @@ waves_upload_mr_char = SV("waves上传体力背景图", priority=5, pm=1)
 waves_mr_char_card_list = SV("waves体力背景图列表", priority=5, pm=1)
 waves_delete_mr_char_card = SV("waves删除体力背景图", priority=5, pm=1)
 waves_delete_all_mr_card = SV("waves删除全部体力背景图", priority=5, pm=1)
+waves_char_alias = SV("waves角色别名", priority=5, pm=5)
+
+
+
+
+# 插件命令触发器
+@waves_char_alias.on_keyword(("别名",))
+async def get_char_aliases(bot: Bot, ev: Event):
+    """
+    响应包含 "别名" 关键词的消息，查询角色别名并返回。
+    """
+    # 提取消息中的角色名
+    text = ev.raw_text  # 直接从 ev.raw_text 获取消息内容
+    parts = text.split("别名")
+    if len(parts) != 2:
+        await bot.send(ev, "呜呜呜，消息格式好像不太对劲呢！")  # 消息格式不正确，直接返回
+        return
+    char_name = parts[0].strip()  # 提取角色名并去除首尾空格
+    # 如果角色名以 `ww` 或 `mc` 开头，就去掉
+    if char_name and char_name.startswith(("ww","kt")):
+        char_name = char_name[2:]
+    aliases = get_aliases(char_name, str(CUSTOM_CHAR_ALIAS_PATH))  # 调用别名查询函数
+    if aliases:
+        reply_message = f"\"{char_name}\"的别名有：{', '.join(aliases)}"
+        await bot.send(reply_message)
+    else:
+        await bot.send(f"哎呀，找不到 {char_name} 的别名呢！请输入正确的角色名")
+def get_aliases(character_name, alias_file):
+    """
+    提取某个角色的所有别名。
+    Args:
+        character_name (str): 角色名或别名。
+        alias_file (str): 别名文件的路径。
+    Returns:
+        list: 包含所有别名的列表，如果找不到角色，则返回 None。
+    """
+    try:
+        with open(alias_file, 'r', encoding='utf-8') as f:
+            alias_data = json.load(f)
+    except FileNotFoundError:
+        print(f"呜呜呜，找不到文件：{alias_file} 呢！")
+        return None
+    except json.JSONDecodeError:
+        print(f"文件 {alias_file} 的格式好像不太对劲，菲比看不懂呢！")
+        return None
+    for char, aliases in alias_data.items():
+        if character_name in aliases:
+            return aliases
+    # 如果没找到，也可能是角色名本身就是键
+    if character_name in alias_data:
+        return alias_data[character_name]
+    print(f"哎呀，找不到 {character_name} 的别名呢！")
+    return None
+
 
 @waves_new_get_char_info.on_fullmatch(
     (

@@ -141,6 +141,14 @@
         "need_admin": false
       },
       {
+        "name": "查询角色别名",
+        "desc": "查询角色别名",
+        "eg": "椿别名",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
         "name": "窥视(:",
         "desc": "窥视面板",
         "eg": "uid椿面板",
