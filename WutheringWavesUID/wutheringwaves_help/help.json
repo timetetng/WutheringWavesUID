@@ -196,6 +196,14 @@
         "need_sk": false,
         "need_admin": false
       },
+            {
+        "name": "抽卡模拟帮助",
+        "desc": "抽卡模拟帮助",
+        "eg": "模拟帮助",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
       {
         "name": "兑换码",
         "desc": "兑换码",
@@ -352,6 +360,14 @@
         "desc": "导出抽卡记录",
         "eg": "导出抽卡记录",
         "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      },
+            {
+        "name": "计算模拟抽卡",
+        "desc": "计算模拟抽卡",
+        "eg": "抽卡模拟",
+        "need_ck": false,
         "need_sk": false,
         "need_admin": false
       }
