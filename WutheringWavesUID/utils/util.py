@@ -84,6 +84,10 @@ def generate_random_string(length=32):
     return random_string
 
 
+def generate_random_ipv6_manual():
+    return ":".join([hex(random.randint(0, 0xFFFF))[2:].zfill(4) for _ in range(8)])
+
+
 def hide_uid(uid: str) -> str:
     from ..wutheringwaves_config import WutheringWavesConfig
 
@@ -117,3 +121,10 @@ async def send_master_info(msg: str):
     if subscribes:
         for sub in subscribes:
             await sub.send(f"【联系主人】：{msg}")
+
+
+def login_platform() -> str:
+    from ..wutheringwaves_config import WutheringWavesConfig
+
+    LoginType = WutheringWavesConfig.get_config("WavesLoginType").data
+    return LoginType if LoginType else "h5"
