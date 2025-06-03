@@ -195,8 +195,8 @@ async def send_event_notification(events: List[str], end_time: datetime):
                     time_str = f"{days}天{hours}小时"
                 
                 im.append(f"以下活动将在{time_str}后结束：")
-                im.extend(events)  # 直接添加活动名称列表
-                im.append("请及时完成活动内容！")
+                im.extend(f"\n\n{events}")  # 直接添加活动名称列表
+                im.append("\n\n请及时完成活动内容！")
                 
                 await subscribe.send(MessageSegment.node(im))
             else:
