@@ -87,15 +87,20 @@ async def get_cookie(bot: Bot, ev: Event) -> Union[List[str], str]:
     if uid_list is None:
         return ERROR_CODE[WAVES_CODE_103]
 
-    msg = []
+    msg = ""  # 修改这里，将 msg 初始化为一个空字符串
     for uid in uid_list:
         ck = await waves_api.get_self_waves_ck(uid, ev.user_id)
         if not ck:
             continue
-        msg.append(f"鸣潮uid: {uid}")
-        msg.append(ck)
+        message = f"""你的uid: {uid}
+你的token: {ck}
+如需使用token登陆其他bot，请复制下面的文本:
+ww添加token {ck}
+
+"""
+        msg += message  # 修改这里，将 message 添加到 msg 字符串中
 
     if not msg:
         return "您当前未绑定token或者token已全部失效\n"
 
-    return msg
+    return msg  # 返回合并后的字符串
