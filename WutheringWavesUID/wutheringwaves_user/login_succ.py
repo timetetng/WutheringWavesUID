@@ -16,15 +16,17 @@ async def login_success_msg(bot: Bot, ev: Event, waves_user: WavesUser):
         WavesButton("深塔", "深塔"),
         WavesButton("冥歌海墟", "冥海"),
     ]
-
     from ..wutheringwaves_charinfo.draw_refresh_char_card import (
         draw_refresh_char_detail_img,
     )
-
+    # 先发送登录成功消息
+    await bot.send(login_succ.format(waves_user.uid))
     msg = await draw_refresh_char_detail_img(
         bot, ev, waves_user.user_id, waves_user.uid, buttons
     )
     if isinstance(msg, bytes):
+        # 如果是图片，再发送图片消息和按钮
         return await bot.send_option(msg, buttons)
     else:
-        return await bot.send(login_succ.format(waves_user.uid))
+        # 如果是文本消息，则不发送额外的消息
+        return msg

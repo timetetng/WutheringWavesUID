@@ -52,8 +52,14 @@ async def send_waves_add_ck_msg(bot: Bot, ev: Event):
         did = ""
 
     if not ck or not did:
+        msg = f"""
+[鸣潮] 该命令末尾需要跟正确的token和did! \n例如【{PREFIX}添加token token,did】
+请注意，token和did之间需要用英文逗号分隔
+使用\"ww登陆帮助\"获取相关帮助
+"""
+  
         return await bot.send(
-            f"[鸣潮] 该命令末尾需要跟正确的token和did! \n例如【{PREFIX}添加token token,did】\n",
+            msg,
             at_sender,
         )
 
@@ -140,7 +146,7 @@ async def send_waves_bind_uid_msg(bot: Bot, ev: Event):
     if "绑定" in ev.command:
         if not uid:
             return await bot.send(
-                f"该命令需要带上正确的uid!\n{PREFIX}绑定uid\n", at_sender
+                f"该命令需要带上正确的uid!\n例如{PREFIX}绑定114514\n", at_sender
             )
         uid_list = await WavesBind.get_uid_list_by_game(qid, ev.bot_id)
         cookie_uid_list = await WavesUser.select_user_cookie_uids(qid)
