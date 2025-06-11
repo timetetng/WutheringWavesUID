@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from sqlalchemy import delete, null
+from sqlalchemy import delete, null, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import and_, or_
 from sqlmodel import Field, col, select
@@ -119,6 +119,20 @@ class WavesUser(User, table=True):
 
     @classmethod
     @with_session
+    async def mark_cookie_invalid(
+        cls: Type[T_WavesUser], session: AsyncSession, uid: str, cookie: str, mark: str
+    ):
+        sql = (
+            update(cls)
+            .where(col(cls.uid) == uid)
+            .where(col(cls.cookie) == cookie)
+            .values(status=mark)
+        )
+        await session.execute(sql)
+        return True
+
+    @classmethod
+    @with_session
     async def select_cookie(
         cls: Type[T_WavesUser],
         session: AsyncSession,
@@ -178,6 +192,16 @@ class WavesUser(User, table=True):
         cls: Type[T_WavesUser], session: AsyncSession, cookie: str
     ) -> Optional[T_WavesUser]:
         sql = select(cls).where(cls.cookie == cookie)
+        result = await session.execute(sql)
+        data = result.scalars().all()
+        return data[0] if data else None
+
+    @classmethod
+    @with_session
+    async def select_data_by_cookie_and_uid(
+        cls: Type[T_WavesUser], session: AsyncSession, cookie: str, uid: str
+    ) -> Optional[T_WavesUser]:
+        sql = select(cls).where(cls.cookie == cookie, cls.uid == uid)
         result = await session.execute(sql)
         data = result.scalars().all()
         return data[0] if data else None

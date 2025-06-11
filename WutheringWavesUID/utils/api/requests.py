@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import json as j
 import random
 from typing import Any, Dict, List, Literal, Optional, Union
@@ -43,6 +44,7 @@ from .api import (
     GACHA_NET_LOG_URL,
     GAME_ID,
     LOGIN_H5_URL,
+    LOGIN_LOG_URL,
     LOGIN_URL,
     MONTH_LIST_URL,
     MR_REFRESH_URL,
@@ -92,7 +94,9 @@ async def _check_response(
         logger.warning(f"[wwuid] code: {res_code} msg: {res_msg} data: {res_data}")
 
         if res_msg and ("重新登录" in res_msg or "登录已过期" in res_msg):
-            if token:
+            if token and roleId:
+                await WavesUser.mark_cookie_invalid(roleId, token, "无效")
+            elif token:
                 await WavesUser.mark_invalid(token, "无效")
             return False, res_msg
 
@@ -108,8 +112,12 @@ async def _check_response(
 
         if res_msg:
             await send_master_info(res_msg)
-            return False, error_reply(WAVES_CODE_999)
+            code = res_code if res_code else WAVES_CODE_999
+            return False, error_reply(code, res_msg)
     return False, error_reply(WAVES_CODE_999)
+
+
+KURO_VERSION = "2.5.0"
 
 
 async def get_common_header(platform: str = "ios"):
@@ -120,7 +128,7 @@ async def get_common_header(platform: str = "ios"):
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0",
         "devCode": devCode,
         "X-Forwarded-For": generate_random_ipv6_manual(),
-        "version": "2.5.0",
+        "version": KURO_VERSION,
     }
     return header
 
@@ -133,7 +141,7 @@ async def get_headers_h5():
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0",
         "devCode": devCode,
         "X-Forwarded-For": generate_random_ipv6_manual(),
-        "version": "2.5.0",
+        "version": KURO_VERSION,
     }
     return header
 
@@ -153,21 +161,43 @@ async def get_headers_ios():
 async def get_headers(
     ck: Optional[str] = None,
     platform: Optional[str] = None,
+    queryRoleId: Optional[str] = None,
 ) -> Dict:
     if not ck and not platform:
         return await get_headers_h5()
 
     bat = ""
     did = ""
-    roleId = ""
+    tokenRoleId = ""
     platform = "ios"
     if ck:
-        waves_user = await WavesUser.select_data_by_cookie(cookie=ck)
-        if waves_user:
-            platform = waves_user.platform
-            bat = waves_user.bat
-            did = waves_user.did
-            roleId = waves_user.uid
+        # 获取当前role信息
+        if queryRoleId:
+            waves_user = await WavesUser.select_data_by_cookie_and_uid(
+                cookie=ck, uid=queryRoleId
+            )
+            if waves_user:
+                platform = waves_user.platform
+                bat = waves_user.bat
+                did = waves_user.did
+                tokenRoleId = waves_user.uid
+
+                logger.debug(
+                    f"[get_headers.self.{inspect.stack()[1].function}] [queryRoleId:{queryRoleId} tokenRoleId:{tokenRoleId}] 获取成功: did: {did} bat: {bat}"
+                )
+
+        # 2次校验
+        if not tokenRoleId:
+            waves_user = await WavesUser.select_data_by_cookie(cookie=ck)
+            if waves_user:
+                platform = waves_user.platform
+                bat = waves_user.bat
+                did = waves_user.did
+                tokenRoleId = waves_user.uid
+
+                logger.debug(
+                    f"[get_headers.other.{inspect.stack()[1].function}.2] [queryRoleId:{queryRoleId} tokenRoleId:{tokenRoleId}] 获取成功: did: {did} bat: {bat}"
+                )
 
     if platform == "ios":
         header = await get_headers_ios()
@@ -177,8 +207,8 @@ async def get_headers(
         header.update({"b-at": bat})
     if did:
         header.update({"did": did})
-    if roleId:
-        header.update({"roleId": roleId})
+    if tokenRoleId:
+        header.update({"roleId": tokenRoleId})
     return header
 
 
@@ -216,19 +246,25 @@ class WavesApi:
         user_id: str,
         bot_id: str,
     ) -> Optional[str]:
-        cookie = await WavesUser.select_cookie(uid, user_id, bot_id)
-        if not cookie:
-            return
-
-        if not await WavesUser.cookie_validate(uid):
+        waves_user = await WavesUser.select_waves_user(uid, user_id, bot_id)
+        if not waves_user or not waves_user.cookie:
             return ""
 
-        succ, data = await self.refresh_data(uid, cookie)
+        if waves_user.status == "无效":
+            return ""
+
+        succ, data = await self.login_log(uid, waves_user.cookie)
+        if not succ:
+            if "重新登录" in data or "登录已过期" in data:
+                await WavesUser.mark_cookie_invalid(uid, waves_user.cookie, "无效")
+            return ""
+
+        succ, data = await self.refresh_data(uid, waves_user.cookie)
         if succ:
-            return cookie
+            return waves_user.cookie
 
         if "重新登录" in data or "登录已过期" in data:
-            await WavesUser.mark_invalid(cookie, "无效")
+            await WavesUser.mark_cookie_invalid(uid, waves_user.cookie, "无效")
             return ""
 
         if isinstance(data, str):
@@ -249,10 +285,17 @@ class WavesApi:
         for user in user_list:
             if not await WavesUser.cookie_validate(user.uid):
                 continue
+
+            succ, data = await self.login_log(user.uid, user.cookie)
+            if not succ:
+                if "重新登录" in data or "登录已过期" in data:
+                    await WavesUser.mark_cookie_invalid(user.uid, user.cookie, "无效")
+                continue
+
             succ, data = await self.refresh_data(user.uid, user.cookie)
             if not succ:
                 if "重新登录" in data or "登录已过期" in data:
-                    await WavesUser.mark_invalid(user.cookie, "无效")
+                    await WavesUser.mark_cookie_invalid(user.uid, user.cookie, "无效")
 
                 if "封禁" in data:
                     break
@@ -293,7 +336,7 @@ class WavesApi:
         self, roleId: str, token: str, gameId: Union[str, int] = GAME_ID
     ) -> tuple[bool, Union[Dict, str]]:
         """每日"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "type": "1",
@@ -314,7 +357,7 @@ class WavesApi:
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> tuple[bool, Union[Dict, str]]:
         """刷新数据"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "gameId": GAME_ID,
@@ -324,10 +367,26 @@ class WavesApi:
         raw_data = await self._waves_request(REFRESH_URL, "POST", header, data=data)
         return await _check_response(raw_data, token, roleId)
 
+    async def login_log(self, roleId: str, token: str):
+        header = await get_headers(ck=token, queryRoleId=roleId)
+        header.update(
+            {
+                "token": token,
+                "devCode": header.get("did", ""),
+                "version": KURO_VERSION,
+            }
+        )
+        header.pop("did", None)
+        header.pop("b-at", None)
+
+        data = {}
+        raw_data = await self._waves_request(LOGIN_LOG_URL, "POST", header, data=data)
+        return await _check_response(raw_data, token, roleId)
+
     async def get_base_info(
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> tuple[bool, Union[Dict, str]]:
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         if header.get("roleId", "") != roleId:
             succ, b_at = await self.get_request_token(
@@ -348,7 +407,7 @@ class WavesApi:
     async def get_role_info(
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> tuple[bool, Union[Dict, str]]:
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         if header.get("roleId", "") != roleId:
             succ, b_at = await self.get_request_token(
@@ -385,7 +444,7 @@ class WavesApi:
     async def get_role_detail_info(
         self, charId: str, roleId: str, token: str, serverId: Optional[str] = None
     ) -> tuple[bool, Union[Dict, str]]:
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         if header.get("roleId", "") != roleId:
             succ, b_at = await self.get_request_token(
@@ -410,7 +469,7 @@ class WavesApi:
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> tuple[bool, Union[Dict, str]]:
         """数据坞"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         if header.get("roleId", "") != roleId:
             succ, b_at = await self.get_request_token(
@@ -438,7 +497,7 @@ class WavesApi:
         countryCode: str = "1",
     ) -> tuple[bool, Union[Dict, str]]:
         """探索度"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         if header.get("roleId", "") != roleId:
             succ, b_at = await self.get_request_token(
@@ -463,7 +522,7 @@ class WavesApi:
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> tuple[bool, Union[Dict, str]]:
         """全息"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         if header.get("roleId", "") != roleId:
             succ, b_at = await self.get_request_token(
@@ -487,7 +546,7 @@ class WavesApi:
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> Union[Dict, int]:
         """深渊"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "gameId": GAME_ID,
@@ -500,7 +559,7 @@ class WavesApi:
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> Union[Dict, int, str]:
         """深渊"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         if header.get("roleId", "") != roleId:
             succ, b_at = await self.get_request_token(
@@ -521,7 +580,7 @@ class WavesApi:
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> Union[Dict, int, str]:
         """冥海"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         if header.get("roleId", "") != roleId:
             succ, b_at = await self.get_request_token(
@@ -542,7 +601,7 @@ class WavesApi:
         self, roleId: str, token: str, serverId: Optional[str] = None
     ) -> Union[Dict, int]:
         """冥海"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "gameId": GAME_ID,
@@ -559,7 +618,7 @@ class WavesApi:
             logger.debug(f"[{roleId}] 缓存读取bat成功: {self.bat_map[roleId]}")
             return True, self.bat_map[roleId]
 
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update(
             {
                 "token": token,
@@ -605,7 +664,7 @@ class WavesApi:
         token: str,
         serverId: Optional[str] = None,
     ) -> tuple[bool, Union[Dict, str]]:
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "serverId": self.get_server_id(roleId, serverId),
@@ -667,7 +726,7 @@ class WavesApi:
         serverId: Optional[str] = None,
     ) -> tuple[bool, Union[Dict, str]]:
         """已拥有角色"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "serverId": self.get_server_id(roleId, serverId),
@@ -686,7 +745,7 @@ class WavesApi:
         serverId: Optional[str] = None,
     ) -> tuple[bool, Union[Dict, str]]:
         """角色培养状态"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "serverId": self.get_server_id(roleId, serverId),
@@ -706,7 +765,7 @@ class WavesApi:
         serverId: Optional[str] = None,
     ) -> tuple[bool, Union[Dict, str]]:
         """角色培养成本"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "serverId": self.get_server_id(roleId, serverId),
@@ -722,7 +781,7 @@ class WavesApi:
         token: str,
     ) -> tuple[bool, Union[Dict, str]]:
         """资源简报列表"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         raw_data = await self._waves_request(PERIOD_LIST_URL, "GET", header)
         return await _check_response(raw_data, token, roleId)
@@ -736,7 +795,7 @@ class WavesApi:
         serverId: Optional[str] = None,
     ) -> tuple[bool, Union[Dict, str]]:
         """资源简报详情"""
-        header = await get_headers(token)
+        header = await get_headers(ck=token, queryRoleId=roleId)
         header.update({"token": token})
         data = {
             "serverId": self.get_server_id(roleId, serverId),
