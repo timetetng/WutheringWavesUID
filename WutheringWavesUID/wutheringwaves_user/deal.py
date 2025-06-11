@@ -124,6 +124,6 @@ ww添加token {ck},{waves_user.did}
 """
         msg = [msg]
     if not msg:
-        return "您当前未绑定token或者token已全部失效\n"
+        return "您当前未绑定token或者token已全部失效\n当前登陆方式与库街区APP冲突，同时登录方式见【ww登录帮助】"
 
     return msg
