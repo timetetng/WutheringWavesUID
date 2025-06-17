@@ -104,7 +104,7 @@ async def get_cookie(bot: Bot, ev: Event) -> Union[List[str], str]:
     if uid_list is None:
         return ERROR_CODE[WAVES_CODE_103]
 
-    msg = ''
+    msg = []
     for uid in uid_list:
         waves_user: Optional[WavesUser] = await WavesUser.select_waves_user(
             uid, ev.user_id, ev.bot_id
@@ -115,17 +115,11 @@ async def get_cookie(bot: Bot, ev: Event) -> Union[List[str], str]:
         ck = await waves_api.get_self_waves_ck(uid, ev.user_id, ev.bot_id)
         if not ck:
             continue
-        msg = f"""你的uid: {uid}
-你的token: {waves_user.cookie}
-你的did: {waves_user.did}
+        msg.append(f"鸣潮uid: {uid}")
+        msg.append(f"token, did: {waves_user.cookie}, {waves_user.did}")
+        msg.append("--------------------------------")
 
-如需使用token登陆其他bot，请复制下面的文本:
-
-ww添加token {ck},{waves_user.did}
-
-"""
-        msg = [msg]
     if not msg:
-        return "您当前未绑定token或者token已全部失效\n当前登陆方式与库街区APP冲突，同时登录方式见【ww登录帮助】"
+        return "您当前未绑定token或者token已全部失效\n当前登录方式与库街区冲突，请不要重复登录！"
 
     return msg
