@@ -108,12 +108,6 @@ CONFIG_DEFAULT: Dict[str, GSC] = {
         "所有查询使用自己的ck",
         False,
     ),
-    "CardUseOptions2": GsStrConfig(
-        "排行面板数据启用规则（重启生效）",
-        "排行面板数据启用规则",
-        "不使用缓存",
-        options=["不使用缓存", "内存缓存"],
-    ),
     "QQPicCache": GsBoolConfig(
         "排行榜qq头像缓存开关",
         "排行榜qq头像缓存开关",
@@ -148,6 +142,11 @@ CONFIG_DEFAULT: Dict[str, GSC] = {
         "隐藏uid",
         False,
     ),
+    "RoleListQuery": GsBoolConfig(
+        "是否可以使用uid直接查询练度",
+        "是否可以使用uid直接查询练度",
+        True,
+    ),
     "MaxBindNum": GsIntConfig(
         "绑定特征码限制数量（未登录）", "绑定特征码限制数量（未登录）", 2, 100
     ),
@@ -169,6 +168,32 @@ CONFIG_DEFAULT: Dict[str, GSC] = {
     "LocalProxyUrl": GsStrConfig(
         "本地代理地址",
         "本地代理地址",
+        "",
+    ),
+    "NeedProxyFunc": GsListStrConfig(
+        "需要代理的函数",
+        "需要代理的函数",
+        ["get_role_detail_info"],
+        options=[
+            "all",
+            "get_role_detail_info",
+        ],
+    ),
+    "RefreshCardConcurrency": GsIntConfig(
+        "刷新角色面板并发数",
+        "刷新角色面板并发数",
+        10,
+        50,
+    ),
+    "CaptchaProvider": GsStrConfig(
+        "验证码提供方（重启生效）",
+        "验证码提供方（重启生效）",
+        "",
+        options=["ttorc"],
+    ),
+    "CaptchaAppKey": GsStrConfig(
+        "验证码提供方appkey",
+        "验证码提供方appkey",
         "",
     ),
 }

@@ -1,6 +1,6 @@
 import time
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
@@ -39,6 +39,7 @@ from ..utils.image import (
 )
 from ..utils.refresh_char_detail import refresh_char
 from ..utils.resource.constant import NAME_ALIAS, SPECIAL_CHAR_NAME
+from ..utils.util import async_func_lock
 from ..utils.waves_api import waves_api
 from ..wutheringwaves_config import PREFIX, WutheringWavesConfig
 
@@ -107,12 +108,14 @@ async def get_refresh_role_img(width: int, height: int):
     return img
 
 
+@async_func_lock(keys=["user_id", "uid"])
 async def draw_refresh_char_detail_img(
     bot: Bot,
     ev: Event,
     user_id: str,
     uid: str,
     buttons: List[WavesButton],
+    refresh_type: Union[str, List[str]] = "all",
 ):
     time_stamp = can_refresh_card(user_id, uid)
     if time_stamp > 0:
@@ -143,7 +146,13 @@ async def draw_refresh_char_detail_img(
         }
     else:
         waves_datas = await refresh_char(
-            ev, uid, user_id, ck, waves_map=waves_map, is_self_ck=self_ck
+            ev,
+            uid,
+            user_id,
+            ck,
+            waves_map=waves_map,
+            is_self_ck=self_ck,
+            refresh_type=refresh_type,
         )
         if isinstance(waves_datas, str):
             return waves_datas
