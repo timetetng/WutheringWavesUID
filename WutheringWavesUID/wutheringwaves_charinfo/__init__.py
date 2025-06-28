@@ -127,6 +127,7 @@ async def send_card_info(bot: Bot, ev: Event):
 
     buttons = []
     msg = await draw_refresh_char_detail_img(bot, ev, user_id, uid, buttons)
+    
     if isinstance(msg, str) or isinstance(msg, bytes):
         return await bot.send_option(msg, buttons)
 
