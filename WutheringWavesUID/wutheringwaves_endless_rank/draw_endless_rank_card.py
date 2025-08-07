@@ -380,8 +380,8 @@ async def draw_endless_rank_img(bot: Bot, ev: Event) -> Union[str, bytes]:
     logo_copy = logo_img.copy()
     logo_copy.thumbnail((150, 150), Image.LANCZOS)
     card_img.alpha_composite(logo_copy, dest=(50, 55))
-    card_img_draw.text((img_width // 2, 80), "海蚀无尽排行", "white", waves_font_40, "mm")
-    card_img_draw.text((img_width // 2, 125), "数据来源: 千咲 · 群内排行", SPECIAL_GOLD, waves_font_20, "mm")
+    card_img_draw.text((img_width // 2, 80), "冥歌海墟无尽排行", "white", waves_font_40, "mm")
+    card_img_draw.text((img_width // 2, 125), "数据来源: 当前群聊", SPECIAL_GOLD, waves_font_20, "mm")
     total_players = len(rankInfoList)
     avg_score = sum(i.endless_score for i in rankInfoList) // total_players if total_players > 0 else 0
     max_score_info = rankInfoList[0] if rankInfoList else None
