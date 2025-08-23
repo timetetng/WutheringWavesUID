@@ -125,6 +125,8 @@ async def send_waves_slash_info(bot: Bot, ev: Event):
     (
         "无尽总排行",
         "冥海总排行",
+        "海墟总排行",
+        "冥歌海墟总排行",
     ),
     block=True,
 )

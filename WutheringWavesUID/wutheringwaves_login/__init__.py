@@ -8,10 +8,10 @@ from ..wutheringwaves_config import PREFIX
 from .login import code_login, page_login
 
 sv_kuro_login = SV("库洛登录")
-sv_kuro_login_help = SV("库洛登录帮助", pm=0, priority=4)
+sv_kuro_login_help = SV("库洛登录帮助", pm=0, priority=5)
 
 
-@sv_kuro_login.on_command(("登录", "登陆", "登入", "登龙", "login"))
+@sv_kuro_login.on_fullmatch(("登录", "登陆", "登入", "登龙", "login"))
 async def get_login_msg(bot: Bot, ev: Event):
     game_title = "[鸣潮]"
 
@@ -35,3 +35,4 @@ async def get_login_msg(bot: Bot, ev: Event):
         f"{game_title} 账号登录失败\n请重新输入命令【{PREFIX}登录】进行登录\n",
         at_sender=at_sender,
     )
+
