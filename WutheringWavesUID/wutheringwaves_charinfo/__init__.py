@@ -1,5 +1,5 @@
 import re
-
+import time
 from PIL import Image
 
 from gsuid_core.bot import Bot
@@ -31,6 +31,7 @@ from .upload_mr_card import (
 )
 import json 
 from ..utils.resource.RESOURCE_PATH import CUSTOM_CHAR_ALIAS_PATH
+from ..utils.image import get_role_pile
 
 waves_new_get_char_info = SV("waves新获取面板", priority=3)
 waves_new_get_one_char_info = SV("waves新获取单个角色面板", priority=3)
@@ -47,8 +48,72 @@ waves_mr_char_card_list = SV("waves体力背景图列表", priority=5, pm=1)
 waves_delete_mr_char_card = SV("waves删除体力背景图", priority=5, pm=1)
 waves_delete_all_mr_card = SV("waves删除全部体力背景图", priority=5, pm=1)
 waves_char_alias = SV("waves角色别名", priority=5, pm=5)
+waves_random_pile = SV("waves角色立绘", priority=5, pm=5)
 
 
+# ----------------- CD 相关 -----------------
+# 用于存储用户上次使用指令的时间戳 {user_id: timestamp}
+RANDOM_PILE_COOLDOWN_TIMESTAMPS = {}
+# 设置冷却时间（秒）
+COOLDOWN_SECONDS = 30
+# -------------------------------------------
+@waves_random_pile.on_regex(r"^[a-zA-Z\u4e00-\u9fa5🥔]+(立绘|色图|涩图|🐍图|面板图|🍞图|面包图)$", block=True)
+async def send_random_custom_pile(bot: Bot, ev: Event):
+    """
+    响应指令，通过调用 get_role_pile 函数随机发送一张指定角色的自定义图片。
+    内置硬编码冷却检测。
+    """
+    # ----------------- 硬编码CD检测逻辑 -----------------
+    user_id = ev.user_id
+    current_time = time.time()
+
+    last_time = RANDOM_PILE_COOLDOWN_TIMESTAMPS.get(user_id, 0)
+    
+    if current_time - last_time < COOLDOWN_SECONDS:
+        remaining_time = int(COOLDOWN_SECONDS - (current_time - last_time)) + 1
+        # 直接发送固定的提示信息
+        await bot.send(f"操作太快啦，请等待 {remaining_time} 秒后再试！")
+        return
+    # ---------------------------------------------------
+
+    # 1. 使用正则表达式解析出角色名
+    match = re.search(r"(?P<char>[a-zA-Z\u4e00-\u9fa5🥔]+)(立绘|色图|涩图|🐍图|面板图|🍞图|面包图)", ev.raw_text)
+    if not match:
+        return
+
+    char = match.group("char")
+    
+    # 2. 和其他指令一样，处理可能存在的前缀
+    if char and len(char) > 2 and char.startswith(("ww","mc")):
+        char = char[2:]
+        
+    if not char:
+        return
+
+    # 3. 将角色名转换为标准的角色ID
+    char_id = char_name_to_char_id(char)
+    if not char_id:
+        await bot.send(f"呜呜呜，找不到名为【{char}】的角色，请检查一下输入哦~")
+        return
+
+    # 4. 直接调用 get_role_pile 函数
+    try:
+        is_custom, pile_image = await get_role_pile(char_id, custom=True)
+
+        if is_custom:
+            logger.info(f"正在发送角色【{char}】的随机自定义立绘...")
+            img_data = await convert_img(pile_image)
+            await bot.send(img_data)
+            # 指令成功执行后，更新用户的时间戳
+            RANDOM_PILE_COOLDOWN_TIMESTAMPS[user_id] = current_time
+        else:
+            await bot.send(f"还没有上传过【{char}】的面包图哦~")
+
+    except FileNotFoundError:
+        await bot.send(f"找不到【{char}】的任何面包图，请确认资源是否完整。")
+    except Exception as e:
+        logger.error(f"发送随机立绘图片时发生错误: {e}")
+        await bot.send("呜...图片发送失败了，请查看后台日志。")
 
 
 # 插件命令触发器
