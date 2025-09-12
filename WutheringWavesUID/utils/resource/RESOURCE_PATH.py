@@ -45,7 +45,7 @@ WUHEN_GUIDE_PATH = GUIDE_PATH / "WuHen"
 # 自定义背景图
 CUSTOM_CARD_PATH = MAIN_PATH / "custom_role_pile"
 CUSTOM_MR_CARD_PATH = MAIN_PATH / "custom_mr_role_pile"
-
+CUSTOM_MR_CARD_PATH2 = MAIN_PATH / "custom_mr_role_pile2"
 # 其他的素材
 OTHER_PATH = MAIN_PATH / "other"
 CALENDAR_PATH = OTHER_PATH / "calendar"

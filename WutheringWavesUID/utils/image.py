@@ -101,6 +101,10 @@ WEAPON_RESONLEVEL_COLOR = {
     6: WAVES_MOLTEN,
 }
 
+from .name_convert import char_name_to_char_id 
+from .resource.RESOURCE_PATH import CUSTOM_MR_CARD_PATH,CUSTOM_MR_CARD_PATH2
+import colorsys
+from gsuid_core.logger import logger
 
 def get_ICON():
     return Image.open(ICON)
@@ -144,7 +148,7 @@ async def get_role_pile_old(
     resource_id: Union[int, str], custom: bool = False
 ) -> Image.Image:
     if custom:
-        custom_dir = f"{CUSTOM_MR_CARD_PATH}/{resource_id}"
+        custom_dir = f"{CUSTOM_MR_CARD_PATH2}/{resource_id}"
         if os.path.isdir(custom_dir) and len(os.listdir(custom_dir)) > 0:
             # logger.info(f'使用自定义角色头像: {resource_id}')
             path = random.choice(os.listdir(custom_dir))
@@ -489,3 +493,109 @@ async def get_custom_gaussian_blur(img: Image.Image) -> Image.Image:
         # 调整对比度
         img = ImageEnhance.Contrast(img).enhance(contrast)
     return img
+
+async def adapt_bg_image(
+    img: Image.Image, target_w: int, target_h: int
+) -> Image.Image:
+    """
+    将任意尺寸的背景图自适应处理为目标尺寸。
+    策略: 按比例缩放，让短边贴合目标尺寸，然后从中心裁剪长边。
+    """
+    original_w, original_h = img.size
+    target_ratio = target_w / target_h
+    original_ratio = original_w / original_h
+
+    if original_ratio > target_ratio:
+        # 原始图片比目标更宽，以高度为基准缩放
+        new_h = target_h
+        new_w = int(new_h * original_ratio)
+        img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+        
+        # --- MODIFICATION START ---
+        # 确保所有坐标都是整数
+        left = int((new_w - target_w) / 2)
+        top = 0
+        right = int(left + target_w)
+        bottom = int(new_h)
+        # --- MODIFICATION END ---
+        
+        img = img.crop((left, top, right, bottom))
+    else:
+        # 原始图片比目标更高（或比例相同），以宽度为基准缩放
+        new_w = target_w
+        new_h = int(new_w / original_ratio)
+        img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+        
+        # --- MODIFICATION START ---
+        # 确保所有坐标都是整数
+        left = 0
+        top = int((new_h - target_h) / 2)
+        right = int(new_w)
+        bottom = int(top + target_h)
+        # --- MODIFICATION END ---
+        
+        img = img.crop((left, top, right, bottom))
+
+    return img
+
+async def get_random_character_bg(char_name: str) -> Optional[Path]:
+    """
+    根据角色名获取一个随机的自定义背景图路径。
+    """
+    char_id = char_name_to_char_id(char_name)
+    if not char_id:
+        return None
+
+    char_bg_dir = CUSTOM_MR_CARD_PATH / str(char_id)
+    if not char_bg_dir.exists() or not char_bg_dir.is_dir():
+        return None
+
+    valid_images = [
+        f
+        for f in char_bg_dir.iterdir()
+        if f.is_file() and f.suffix.lower() in [".jpg", ".png", ".jpeg", ".webp"]
+    ]
+    
+    # ===================== 在这里加上日志 =====================
+    logger.info(f"为角色 {char_name} 找到了 {len(valid_images)} 张背景图: {[img.name for img in valid_images]}")
+    # ==========================================================
+
+    if not valid_images:
+        return None
+
+    return random.choice(valid_images)
+
+def adjust_color(rgb_color, brightness_factor, saturation_factor):
+    """
+    调整RGB颜色的亮度和饱和度。
+    :param rgb_color: (r, g, b) 元组, 范围 0-255
+    :param brightness_factor: 亮度调整因子, >1 提亮, <1 变暗
+    :param saturation_factor: 饱和度调整因子, >1 更鲜艳, <1 更灰
+    :return: 调整后的 (r, g, b) 元组
+    """
+    r, g, b = [x / 255.0 for x in rgb_color[:3]]  # 归一化到 0-1
+    
+    # RGB 转 HLS (色相, 亮度, 饱和度)
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    
+    # 调整亮度和饱和度
+    l = min(1.0, l * brightness_factor)
+    s = min(1.0, s * saturation_factor)
+    
+    # HLS 转 RGB
+    r, g, b = colorsys.hls_to_rgb(h, l, s)
+    
+    # 转回 0-255 范围
+    return int(r * 255), int(g * 255), int(b * 255)
+
+def is_color_light(rgb_color):
+    """
+    根据人眼感知加权平均法，判断一个颜色是亮色还是暗色。
+    :param rgb_color: (r, g, b) 元组, 范围 0-255
+    :return: True 如果是亮色, False 如果是暗色
+    """
+    r, g, b = rgb_color[:3]
+    # 计算加权亮度，这个公式更符合人眼对不同颜色的敏感度
+    luminance = 0.299 * r + 0.587 * g + 0.114 * b
+    # 140是一个比较适中的阈值，可以根据需要微调
+    return luminance > 140

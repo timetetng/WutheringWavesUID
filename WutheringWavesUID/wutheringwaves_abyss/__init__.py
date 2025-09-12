@@ -94,6 +94,7 @@ async def send_waves_challenge_info(bot: Bot, ev: Event):
         "查询无尽",
         "查询海墟",
         "无尽",
+        "吴京",
         "无尽深渊",
         "禁忌",
         "禁忌海域",
@@ -116,7 +117,7 @@ async def send_waves_slash_info(bot: Bot, ev: Event):
             WavesButton("冥歌海墟", "冥海"),
             WavesButton("冥海前6层", "禁忌"),
             WavesButton("冥海11层", "冥海11"),
-            WavesButton("冥海12层", "无尽"),
+            WavesButton("吴京", "无尽"),
         ]
         return await bot.send_option(im, buttons)
 

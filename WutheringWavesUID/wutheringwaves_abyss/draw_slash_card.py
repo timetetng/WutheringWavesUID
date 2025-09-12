@@ -107,7 +107,7 @@ async def draw_slash_img(ev: Event, uid: str, user_id: str) -> Union[bytes, str]
     command = ev.command
     text = ev.text.strip()
     challengeIds = [7, 8, 9, 10, 11, 12] if is_self_ck else [12]
-    if "无尽" in text or "无尽" in command or "wj" in text or "wj" in command:
+    if "无尽" in text or "无尽" in command or "wj" in text or "wj" in command or "吴京" in text or "吴京" in command:
         challengeIds = [12]
     elif "禁忌" in text or "禁忌" in command:
         challengeIds = [1, 2, 3, 4, 5, 6]
