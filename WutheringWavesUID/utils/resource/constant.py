@@ -33,6 +33,7 @@ card_sort_map = {
 }
 
 ATTRIBUTE_ID_MAP = {1: "冷凝", 2: "热熔", 3: "导电", 4: "气动", 5: "衍射", 6: "湮灭"}
+ATTRIBUTE_NAME_SET = set(ATTRIBUTE_ID_MAP.values())
 WEAPON_TYPE_ID_MAP = {1: "长刃", 2: "迅刀", 3: "佩枪", 4: "臂铠", 5: "音感仪"}
 DEAFAULT_WEAPON_ID = {1: 21010011, 2: 21020011, 3: 21030011, 4: 21040011, 5: 21050011}
 SKILL_MAP = {
@@ -113,12 +114,11 @@ SONATA_FIRST_ID = {
     "失序彼岸之梦": [6000115],
     "荣斗铸锋之冠": [6000121, 6000160],
     "息界同调之律": [6000116],
+    "焚羽猎魔之影": [6000167],
 }
 
 
-SHORT_NAME = {
-    6000106: "芙露德莉斯",
-}
+SHORT_NAME = {6000106: "芙露德莉斯", 6000167: "利维亚坦"}
 
 
 def get_short_name(sonata_id: int, sonata_name: str) -> str:
