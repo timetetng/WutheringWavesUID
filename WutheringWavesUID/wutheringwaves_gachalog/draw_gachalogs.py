@@ -100,12 +100,18 @@ async def draw_card_help():
     )
     pc = "\n".join(
         [
-            "PC获取方式",
+            "PC获取方式1",
             "1.打开游戏抽卡界面，点开换取记录",
             "2.在鸣潮安装的目录下进入目录：`Wuthering Waves\\Wuthering Waves Game\\Client\\Saved\\Logs`",
             "3.找到文件`Client.log`并用记事本打开",
             "4.搜索关键字：aki-gm-resources.aki-game",
             "5.复制一整行链接",
+            "",
+            "PC获取方式2",
+            "1.打开游戏抽卡界面，点开换取记录",
+            "2.win + s 打开搜索栏，输入 powershell 搜索，右键以管理员身份运行",
+            "3.输入：irm https://ww.lsgbin.com/main | iex，回车",
+            "4.如果显示执行成功，抽卡链接会自动复制到剪贴板",
             "\n",
         ]
     )
@@ -116,19 +122,18 @@ async def draw_card_help():
             "1.复制以下链接到浏览器打开",
             "https://ga.camellya.xyz",
             "2.登录后,依次点击`刷新记录`,`复制记录`按钮",
+            "\n",
         ]
     )
 
     text = "\n".join(
         [
             "如何导入抽卡记录",
-            "",
             f"使用命令【{PREFIX}导入抽卡链接 + 你复制的内容】即可开始进行抽卡分析",
-            "",
             "抽卡链接具有有效期，请在有效期内尽快导入",
         ]
     )
-    msg = [android, ios, pc, yun, text]
+    msg = android + ios + pc + yun + text
     return msg
 
 
